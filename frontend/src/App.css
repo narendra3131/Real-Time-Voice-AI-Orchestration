@@ -1,0 +1,116 @@
+/* ============================================
+   APP LAYOUT
+   ============================================ */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+  background: var(--bg-primary);
+}
+
+.main-content {
+  flex: 1;
+  display: flex;
+  margin-left: 260px;
+  min-height: 100vh;
+}
+
+.content-area {
+  flex: 1;
+  padding: var(--space-xl);
+  display: flex;
+  flex-direction: column;
+  min-width: 0; /* prevent flex overflow */
+}
+
+.side-panels {
+  width: 340px;
+  min-width: 340px;
+  border-left: 1px solid var(--border-color);
+  background: var(--bg-secondary);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  position: sticky;
+  top: 0;
+  overflow-y: auto;
+}
+
+/* ============================================
+   DESKTOP LARGE (> 1400px)
+   ============================================ */
+
+@media (min-width: 1400px) {
+  .side-panels {
+    width: 380px;
+    min-width: 380px;
+  }
+}
+
+/* ============================================
+   TABLET (769px – 1024px)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .main-content {
+    margin-left: 72px;
+    flex-direction: column;
+  }
+
+  .content-area {
+    padding: var(--space-lg);
+  }
+
+  .side-panels {
+    width: 100%;
+    min-width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    max-height: 50vh;
+    position: relative;
+    flex-direction: row;
+  }
+
+  .side-panels > * {
+    flex: 1;
+    min-width: 0;
+  }
+}
+
+/* ============================================
+   MOBILE (≤ 768px)
+   ============================================ */
+
+@media (max-width: 768px) {
+  .main-content {
+    margin-left: 0;
+    margin-top: 56px; /* mobile topbar height */
+    flex-direction: column;
+  }
+
+  .content-area {
+    padding: var(--space-md);
+    padding-bottom: var(--space-lg);
+  }
+
+  .side-panels {
+    width: 100%;
+    min-width: 100%;
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    max-height: none;
+    position: relative;
+    flex-direction: column;
+  }
+}
+
+/* ============================================
+   SMALL MOBILE (≤ 480px)
+   ============================================ */
+
+@media (max-width: 480px) {
+  .content-area {
+    padding: var(--space-sm);
+    padding-top: var(--space-md);
+  }
+}

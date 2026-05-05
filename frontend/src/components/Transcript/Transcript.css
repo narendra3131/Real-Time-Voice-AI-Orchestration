@@ -1,0 +1,179 @@
+/* ============================================
+   TRANSCRIPT PANEL
+   ============================================ */
+
+.transcript-panel {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  border-bottom: 1px solid var(--border-color);
+  min-height: 0;
+}
+
+.panel-title {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-md) var(--space-lg);
+  font-size: var(--font-size-sm);
+  font-weight: 700;
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-color);
+  flex-shrink: 0;
+}
+
+.panel-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--text-muted);
+  flex-shrink: 0;
+}
+
+.panel-dot.live {
+  background: var(--danger);
+  animation: pulse-glow-red 1.5s ease-in-out infinite;
+}
+
+@keyframes pulse-glow-red {
+  0%, 100% { box-shadow: 0 0 4px var(--danger-glow); }
+  50% { box-shadow: 0 0 10px var(--danger-glow); }
+}
+
+.transcript-list {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+}
+
+.transcript-empty {
+  text-align: center;
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+  padding: var(--space-xl);
+}
+
+.transcript-item {
+  display: flex;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-sm);
+  animation: fadeIn 0.3s ease-out;
+}
+
+.transcript-item.user {
+  background: rgba(99, 102, 241, 0.06);
+}
+
+.transcript-item.agent {
+  background: rgba(139, 92, 246, 0.06);
+}
+
+.transcript-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+}
+
+.transcript-item.user .transcript-avatar {
+  background: rgba(99, 102, 241, 0.15);
+  color: var(--accent-primary);
+}
+
+.transcript-item.agent .transcript-avatar {
+  background: rgba(139, 92, 246, 0.15);
+  color: var(--accent-secondary);
+}
+
+.transcript-content {
+  min-width: 0;
+  flex: 1;
+}
+
+.transcript-meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: 2px;
+}
+
+.transcript-role {
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.transcript-time {
+  font-size: 10px;
+  color: var(--text-muted);
+}
+
+.transcript-text {
+  font-size: var(--font-size-xs);
+  color: var(--text-primary);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* ============================================
+   RESPONSIVE — TABLET (side panels become row)
+   ============================================ */
+
+@media (max-width: 1024px) {
+  .transcript-panel {
+    border-bottom: none;
+    border-right: 1px solid var(--border-color);
+    max-height: 50vh;
+  }
+
+  .transcript-list {
+    padding: var(--space-sm);
+  }
+
+  .panel-title {
+    padding: var(--space-sm) var(--space-md);
+    font-size: var(--font-size-xs);
+  }
+}
+
+/* ============================================
+   RESPONSIVE — MOBILE
+   ============================================ */
+
+@media (max-width: 768px) {
+  .transcript-panel {
+    border-right: none;
+    border-bottom: 1px solid var(--border-color);
+    max-height: 250px;
+  }
+
+  .panel-title {
+    padding: var(--space-sm) var(--space-md);
+  }
+
+  .transcript-list {
+    padding: var(--space-sm);
+  }
+
+  .transcript-avatar {
+    width: 24px;
+    height: 24px;
+    font-size: 0.75rem;
+  }
+
+  .transcript-text {
+    font-size: 11px;
+  }
+
+  .transcript-empty {
+    padding: var(--space-md);
+  }
+}
