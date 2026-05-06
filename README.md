@@ -266,4 +266,4 @@ Real-Time-Voice-AI-Orchestration/
 
 ## 📝 License
 
-MIT
+All Rights Reserved
