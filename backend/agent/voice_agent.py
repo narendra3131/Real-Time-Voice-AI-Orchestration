@@ -23,6 +23,7 @@ from livekit.agents import (
     AutoSubscribe,
     JobContext,
     JobProcess,
+    RoomInputOptions,
     WorkerOptions,
     cli,
 )
@@ -180,9 +181,13 @@ async def entrypoint(ctx: JobContext):
     # Store room reference for data channel
     _room_ref = ctx.room
 
-    # Create agent and session
+    # Create agent and session with interruption support
     agent = VoiceAIAgent()
-    session = AgentSession()
+    session = AgentSession(
+        allow_interruptions=True,          # agent stops when user speaks
+        interrupt_min_words=1,             # interrupt after just 1 word detected
+        min_endpointing_delay=0.3,         # fast endpointing for snappy turn-taking
+    )
 
     # Listen for speech events to send agent transcripts
     @session.on("agent_state_changed")
