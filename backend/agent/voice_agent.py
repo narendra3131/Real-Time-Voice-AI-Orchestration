@@ -185,8 +185,6 @@ async def entrypoint(ctx: JobContext):
     agent = VoiceAIAgent()
     session = AgentSession(
         allow_interruptions=True,          # agent stops when user speaks
-        interrupt_min_words=1,             # interrupt after just 1 word detected
-        min_endpointing_delay=0.3,         # fast endpointing for snappy turn-taking
     )
 
     # Listen for speech events to send agent transcripts
