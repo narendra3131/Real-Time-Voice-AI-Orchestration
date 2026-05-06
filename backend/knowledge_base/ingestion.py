@@ -30,7 +30,7 @@ def _save_registry(docs: List[Dict[str, Any]]) -> None:
         json.dump(docs, f, indent=2)
 
 
-def _chunk_text(text: str, chunk_size: int = 500, chunk_overlap: int = 50) -> List[str]:
+def _chunk_text(text: str, chunk_size: int = 300, chunk_overlap: int = 30) -> List[str]:
     """
     Simple recursive text chunker that splits on paragraph, sentence,
     and word boundaries. No heavy dependencies needed.

@@ -12,6 +12,7 @@ import json
 import logging
 import sys
 from pathlib import Path
+from concurrent.futures import ThreadPoolExecutor
 
 # Ensure parent is on path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
@@ -37,6 +38,9 @@ logger.setLevel(logging.INFO)
 # Store room reference for data channel publishing
 _room_ref = None
 
+# Thread pool for running blocking RAG calls off the event loop
+_rag_executor = ThreadPoolExecutor(max_workers=2, thread_name_prefix="rag")
+
 
 class VoiceAIAgent(Agent):
     """Custom voice agent with RAG capabilities."""
@@ -44,10 +48,23 @@ class VoiceAIAgent(Agent):
     def __init__(self):
         super().__init__(
             instructions=get_system_prompt(),
-            stt=deepgram.STT(language="en"),
-            llm=openai.LLM(model="gpt-4o-mini"),
+            # --- STT: Deepgram Nova-2 with low-latency streaming ---
+            stt=deepgram.STT(
+                language="en",
+                model="nova-2",
+            ),
+            # --- LLM: GPT-4o-mini tuned for speed ---
+            llm=openai.LLM(
+                model="gpt-4o-mini",
+                temperature=0.7,
+            ),
+            # --- TTS: OpenAI with fastest voice ---
             tts=openai.TTS(voice="alloy"),
-            vad=silero.VAD.load(),
+            # --- VAD: Silero with faster cut-in ---
+            vad=silero.VAD.load(
+                min_silence_duration=0.3,   # was ~0.5s default → faster endpointing
+                min_speech_duration=0.1,    # detect speech faster
+            ),
         )
 
     async def on_enter(self):
@@ -63,6 +80,7 @@ class VoiceAIAgent(Agent):
         """
         Called when the user finishes speaking, before LLM responds.
         We inject RAG context from the knowledge base here.
+        Runs RAG search in a thread pool to avoid blocking the event loop.
         """
         global _room_ref
 
@@ -73,16 +91,22 @@ class VoiceAIAgent(Agent):
 
         logger.info(f"User said: {user_msg[:100]}")
 
-        # Send user transcript to frontend
-        await self._publish_data({
+        # Send user transcript to frontend (non-blocking)
+        asyncio.ensure_future(self._publish_data({
             "type": "transcript",
             "role": "user",
             "text": user_msg,
-        })
+        }))
 
-        # Search knowledge base for relevant context
+        # Run RAG search in a background thread (non-blocking)
+        loop = asyncio.get_event_loop()
         try:
-            results = search_documents(user_msg, top_k=5)
+            results = await loop.run_in_executor(
+                _rag_executor,
+                search_documents,
+                user_msg,
+                3,  # top_k=3 (was 5) → less context = faster LLM response
+            )
         except Exception as e:
             logger.warning(f"RAG search failed: {e}")
             return
@@ -97,7 +121,7 @@ class VoiceAIAgent(Agent):
         for r in results:
             context_parts.append(r["text"])
             sources.append({
-                "text": r["text"][:200] + ("..." if len(r["text"]) > 200 else ""),
+                "text": r["text"][:150] + ("..." if len(r["text"]) > 150 else ""),
                 "source": r.get("metadata", {}).get("source", "Unknown"),
                 "score": r.get("score", 0),
             })
@@ -111,15 +135,16 @@ class VoiceAIAgent(Agent):
             f"## Relevant Context from Knowledge Base:\n"
             f"{context_text}\n\n"
             f"Use the above context to answer the user's question accurately. "
-            f"If the context is relevant, base your answer on it."
+            f"If the context is relevant, base your answer on it. "
+            f"Keep your response concise and conversational."
         )
         await self.update_instructions(enhanced_instructions)
 
-        # Send RAG sources to frontend
-        await self._publish_data({
+        # Send RAG sources to frontend (non-blocking)
+        asyncio.ensure_future(self._publish_data({
             "type": "rag_sources",
             "sources": sources,
-        })
+        }))
 
         logger.info(f"RAG: injected {len(results)} chunks for: {user_msg[:80]}")
 

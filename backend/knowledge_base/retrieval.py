@@ -38,8 +38,8 @@ def search_documents(query: str, top_k: int = 5) -> List[Dict[str, Any]]:
         # Convert to similarity score (1 = identical, 0 = orthogonal)
         similarity = 1 - (dist / 2)
 
-        # Filter out low-relevance results
-        if similarity < 0.3:
+        # Filter out low-relevance results (higher threshold = faster responses)
+        if similarity < 0.45:
             continue
 
         formatted.append(
