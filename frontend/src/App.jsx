@@ -47,11 +47,18 @@ function App() {
     try {
       const data = JSON.parse(new TextDecoder().decode(msg.payload));
       if (data.type === 'transcript') {
-        setTranscripts(prev => [...prev, {
-          role: data.role,
-          text: data.text,
-          timestamp: new Date().toLocaleTimeString(),
-        }]);
+        setTranscripts(prev => {
+          // Deduplicate: skip if last entry has same role + same text
+          const last = prev[prev.length - 1];
+          if (last && last.role === data.role && last.text === data.text) {
+            return prev;
+          }
+          return [...prev, {
+            role: data.role,
+            text: data.text,
+            timestamp: new Date().toLocaleTimeString(),
+          }];
+        });
       } else if (data.type === 'rag_sources') {
         setRagSources(data.sources || []);
       }

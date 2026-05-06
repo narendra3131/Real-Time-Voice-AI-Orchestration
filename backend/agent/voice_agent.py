@@ -207,9 +207,19 @@ async def entrypoint(ctx: JobContext):
         """Send agent transcript when agent finishes speaking."""
         try:
             item = ev.item if hasattr(ev, "item") else ev
-            if hasattr(item, "role") and str(item.role) == "ChatRole.ASSISTANT":
-                text = item.text_content if hasattr(item, "text_content") else ""
+            # Robust role check — match any assistant-like role string
+            role_str = str(getattr(item, "role", "")).lower()
+            is_agent = "assistant" in role_str
+
+            if is_agent:
+                text = ""
+                if hasattr(item, "text_content"):
+                    text = item.text_content or ""
+                elif hasattr(item, "content"):
+                    text = str(item.content) or ""
+
                 if text:
+                    logger.info(f"Agent said: {text[:100]}")
                     asyncio.ensure_future(
                         ctx.room.local_participant.publish_data(
                             json.dumps({
@@ -222,6 +232,37 @@ async def entrypoint(ctx: JobContext):
                     )
         except Exception as e:
             logger.debug(f"Transcript event error: {e}")
+
+    @session.on("agent_speech_committed")
+    def on_agent_speech_committed(ev):
+        """
+        Fallback: fired when the agent finishes speaking a full utterance.
+        Guarantees agent text appears in the transcript even if
+        conversation_item_added doesn't fire.
+        """
+        try:
+            text = ""
+            if hasattr(ev, "content"):
+                text = ev.content
+            elif hasattr(ev, "text"):
+                text = ev.text
+            elif hasattr(ev, "item") and hasattr(ev.item, "text_content"):
+                text = ev.item.text_content
+
+            if text:
+                logger.info(f"Agent speech committed: {text[:100]}")
+                asyncio.ensure_future(
+                    ctx.room.local_participant.publish_data(
+                        json.dumps({
+                            "type": "transcript",
+                            "role": "agent",
+                            "text": text,
+                        }).encode("utf-8"),
+                        reliable=True,
+                    )
+                )
+        except Exception as e:
+            logger.debug(f"Speech committed event error: {e}")
 
     # Start the session
     await session.start(
